@@ -1,5 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { TauriEvent } from '@tauri-apps/api/event';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+
 
 function App() {
   const [input, setInput] = useState<string>('');
@@ -8,7 +11,7 @@ function App() {
   const [currentDirectory, setCurrentDirectory] = useState<string>('C:\\'); // Default directory
   const outputEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null); // Add this line for input reference
-  
+  const appWindow = getCurrentWindow();
   // Auto-scroll to bottom of terminal output
   useEffect(() => {
     outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -129,7 +132,11 @@ function App() {
   
   return (
     <div className="flex flex-col h-screen bg-black text-green-400 p-2 font-mono">
-      <div data-tauri-drag-region className="w-full h-12 bg-white"></div>
+      <div data-tauri-drag-region className="flex gap-10 w-full h-10 mb-4 bg-white">
+        <div className='h-auto w-10 bg-gray-700' onClick={() => appWindow.minimize()}></div>
+        <div className='h-auto w-10 bg-gray-700' onClick={() => appWindow.maximize()}></div>
+        <div className='h-auto w-10 bg-gray-700' onClick={() => appWindow.close()}></div>
+      </div>
       <div className="flex-1 overflow-auto mb-4">
         {output.map((line, index) => (
           <div key={index} className="whitespace-pre-wrap">{line}</div>
