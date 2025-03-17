@@ -65,6 +65,26 @@ function App() {
     }
   }, [activeTabId]);
 
+  // Focus input when window gains focus
+  useEffect(() => {
+    // Skip if no active tab
+    if (!activeTab) return;
+    
+    const focusHandler = () => {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 10);
+    };
+    
+    // Listen for window focus events
+    const unlisten = window.listen('tauri://focus', focusHandler);
+    
+    // Clean up listener
+    return () => {
+      unlisten.then(unlistenFn => unlistenFn());
+    };
+  }, [activeTab]);
+
   // Helper to update active tab
   const updateActiveTab = (updates: Partial<TerminalTab>) => {
     setTabs(currentTabs => 
@@ -226,10 +246,10 @@ function App() {
   }
   
   return (
-    <div className="flex flex-col h-screen bg-black text-green-400 p-2 font-mono">
+    <div className="flex mt-10 flex-col h-screen bg-[#000000] text-purple-500 p-2 font-mono">
       {/* Topbar - Add data-tauri-drag-region to make the topbar draggable */}
       <div 
-        className="flex items-center w-full h-10 mb-4 bg-gray-600 border-b border-gray-700" 
+        className="flex items-center w-full h-10 bg-transparent border-b border-[rgb(19,19,19)] backdrop-blur-2xl overflow-hidden select-none fixed top-0 left-0" 
         data-tauri-drag-region
         onDoubleClick={handleTopbarDoubleClick}
       >
@@ -243,7 +263,7 @@ function App() {
               <div
                 key={tab.id} 
                 className={`relative flex items-center px-4 py-2 mr-1 cursor-pointer ${
-                  tab.id === activeTabId ? 'bg-gray-800 text-white' : 'bg-gray-700 text-gray-300'
+                  tab.id === activeTabId ? 'bg-[#181818] text-white' : 'bg-[rgba(0,0,0,0)] text-gray-300'
                 }`}
                 onClick={() => setActiveTabId(tab.id)}
                 onMouseDown={(e) => e.stopPropagation()}
@@ -267,28 +287,28 @@ function App() {
           <button
             onClick={addNewTab}
             onMouseDown={(e) => e.stopPropagation()}
-            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-xl font-light"
+            className="px-3 py-2 bg-[rgb(0,0,0)] hover:bg-gray-600 text-xl font-light"
           >
             +
           </button>
         </div>
         <div className="flex" data-tauri-drag-region>
           <button
-            className="h-auto w-10 bg-gray-700 flex items-center justify-center hover:bg-gray-600" 
+            className="h-10 w-10 bg-transparent flex items-center justify-center hover:bg-gray-600" 
             onClick={() => window.minimize()}
             onMouseDown={(e) => e.stopPropagation()}
           >
             -
           </button>
           <button
-            className="h-auto w-10 bg-gray-700 flex items-center justify-center hover:bg-gray-600" 
+            className="h-auto w-10 bg-transparent flex items-center justify-center hover:bg-gray-600" 
             onClick={() => window.toggleMaximize()}
             onMouseDown={(e) => e.stopPropagation()}
           >
             □
           </button>
           <button
-            className="h-auto w-10 bg-gray-700 flex items-center justify-center hover:bg-gray-600 hover:text-red-500" 
+            className="h-auto w-10 bg-transparent flex items-center justify-center hover:bg-gray-600 hover:text-red-500" 
             onClick={() => window.close()}
             onMouseDown={(e) => e.stopPropagation()}
           >
@@ -297,14 +317,14 @@ function App() {
         </div>
       </div>
       
-      <div className="flex-1 overflow-auto mb-4">
+      <div className="flex-1 h-full overflow-auto">
         {activeTab.output.map((line, index) => (
-          <div key={index} className="whitespace-pre-wrap">{line}</div>
+          <div key={index} className="whitespace-pre-wrap mt-10 mb-10">{line}</div>
         ))}
         <div ref={outputEndRef} />
       </div>
       
-      <div className="flex items-center">
+      <div className="flex w-full flex-row items-center p-3 bg-transparent backdrop-blur-2xl fixed bottom-0 left-0 border-t border-[rgb(19,19,19)]">
         <span className="mr-2">{activeTab.currentDirectory}</span>
         <input
           ref={inputRef}
@@ -312,7 +332,7 @@ function App() {
           value={activeTab.input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          className="flex-1 bg-transparent outline-none"
+          className="flex w-full bg-transparent outline-none"
           placeholder="Enter command..."
           disabled={activeTab.isProcessing}
           autoFocus
