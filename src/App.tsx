@@ -317,9 +317,9 @@ function App() {
         </div>
       </div>
       
-      <div className="flex-1 h-full overflow-auto">
+      <div className="flex-1 h-full overflow-auto mb-12">
         {activeTab.output.map((line, index) => (
-          <div key={index} className="whitespace-pre-wrap mt-10 mb-10">{line}</div>
+          <div key={index} className="whitespace-pre-wrap mt-10 mb-5">{line}</div>
         ))}
         <div ref={outputEndRef} />
       </div>
