@@ -1,59 +1,139 @@
 import { useEffect, useState, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { TauriEvent } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
+// Define interface for terminal tab
+interface TerminalTab {
+  id: string;
+  input: string;
+  output: string[];
+  isProcessing: boolean;
+  currentDirectory: string;
+}
 
 function App() {
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string[]>([]);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [currentDirectory, setCurrentDirectory] = useState<string>('C:\\'); // Default directory
+  const [tabs, setTabs] = useState<TerminalTab[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string>('');
   const outputEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null); // Add this line for input reference
-  const appWindow = getCurrentWindow();
-  // Auto-scroll to bottom of terminal output
+  const inputRef = useRef<HTMLInputElement>(null);
+  const window = getCurrentWindow();
+  
+  // Initialize the first tab on component mount
   useEffect(() => {
-    outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [output]);
-
-  // Focus input when component mounts
-  useEffect(() => {
-    inputRef.current?.focus();
+    const initialTabId = Date.now().toString();
+    setTabs([{
+      id: initialTabId,
+      input: '',
+      output: [],
+      isProcessing: false,
+      currentDirectory: 'C:\\', // Default directory
+    }]);
+    setActiveTabId(initialTabId);
   }, []);
 
-  // Fetch initial directory when component mounts
+  // Get the currently active tab
+  const activeTab = tabs.find(tab => tab.id === activeTabId);
+
+  // Auto-scroll to bottom of terminal output
   useEffect(() => {
+    if (activeTab) {
+      outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [activeTab?.output]);
+
+  // Focus input when component mounts or active tab changes
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [activeTabId]);
+
+  // Fetch initial directory when a new tab is created
+  useEffect(() => {
+    if (!activeTab) return;
+
     const getInitialDirectory = async () => {
       try {
         const dir = await invoke<string>('get_current_directory');
-        setCurrentDirectory(dir);
+        updateActiveTab({ currentDirectory: dir });
       } catch (error) {
         console.error("Failed to get initial directory:", error);
       }
     };
     
-    getInitialDirectory();
-  }, []);
-  
+    // Only fetch if we have the default directory
+    if (activeTab.currentDirectory === 'C:\\') {
+      getInitialDirectory();
+    }
+  }, [activeTabId]);
+
+  // Helper to update active tab
+  const updateActiveTab = (updates: Partial<TerminalTab>) => {
+    setTabs(currentTabs => 
+      currentTabs.map(tab => 
+        tab.id === activeTabId ? { ...tab, ...updates } : tab
+      )
+    );
+  };
+
+  const addNewTab = async () => {
+    const newTabId = Date.now().toString();
+    let initialDir = 'C:\\';
+    
+    try {
+      initialDir = await invoke<string>('get_current_directory');
+    } catch (error) {
+      console.error("Failed to get directory for new tab:", error);
+    }
+    
+    const newTab: TerminalTab = {
+      id: newTabId,
+      input: '',
+      output: [],
+      isProcessing: false,
+      currentDirectory: initialDir,
+    };
+    
+    setTabs(currentTabs => [...currentTabs, newTab]);
+    setActiveTabId(newTabId);
+  };
+
+  const closeTab = (tabId: string) => {
+    // Don't close the last tab
+    if (tabs.length <= 1) return;
+    
+    setTabs(currentTabs => currentTabs.filter(tab => tab.id !== tabId));
+    
+    // If we're closing the active tab, activate the previous one
+    if (activeTabId === tabId) {
+      const tabIndex = tabs.findIndex(tab => tab.id === tabId);
+      const newActiveIndex = tabIndex === 0 ? 1 : tabIndex - 1;
+      setActiveTabId(tabs[newActiveIndex].id);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
+    if (!activeTab) return;
+    updateActiveTab({ input: e.target.value });
   };
   
   const executeCommand = async () => {
-    if (!input.trim()) return;
+    if (!activeTab) return;
+    if (!activeTab.input.trim()) return;
     
-    setIsProcessing(true);
-    setOutput(prev => [...prev, `${currentDirectory}> ${input}`]);
+    updateActiveTab({
+      isProcessing: true,
+      output: [...activeTab.output, `${activeTab.currentDirectory}> ${activeTab.input}`]
+    });
     
     // Handle clear command
-    const trimmedInput = input.trim().toLowerCase();
+    const trimmedInput = activeTab.input.trim().toLowerCase();
     if (trimmedInput === 'clear' || trimmedInput === 'cls') {
       // Clear screen after a brief delay to show the command
       setTimeout(() => {
-        setOutput([]);
-        setIsProcessing(false);
-        setInput('');
+        updateActiveTab({
+          output: [],
+          isProcessing: false,
+          input: ''
+        });
         inputRef.current?.focus(); // Focus input after clearing
       }, 100);
       return;
@@ -62,16 +142,17 @@ function App() {
     try {
       // Handle cd command specially to track directory changes
       if (trimmedInput.startsWith('cd ')) {
-        const newPath = input.trim().substring(3);
+        const newPath = activeTab.input.trim().substring(3);
         const result = await invoke<string>('change_directory', {
           path: newPath
         });
         
         // Update current directory
-        setCurrentDirectory(result);
+        updateActiveTab({ currentDirectory: result });
         
         if (result.trim()) {
-          setOutput(prev => [...prev, result]);
+          const updatedOutput = [...activeTab.output, result];
+          updateActiveTab({ output: updatedOutput });
         }
       } else {
         // Regular command execution
@@ -81,14 +162,14 @@ function App() {
         // On Unix-like systems, use bash
         if (navigator.userAgent.includes('Linux') || navigator.userAgent.includes('Mac')) {
           shellName = 'bash';
-          args = [input]; // Pass the full command as one argument
+          args = [activeTab.input]; // Pass the full command as one argument
         } else {
           // For Windows, split the command
-          if (input.toLowerCase().startsWith('powershell ')) {
+          if (activeTab.input.toLowerCase().startsWith('powershell ')) {
             shellName = 'powershell';
             
             // Get the actual PowerShell command
-            const powershellCommand = input.substring('powershell '.length);
+            const powershellCommand = activeTab.input.substring('powershell '.length);
             
             // Simple handling for all PowerShell commands without special formatting for ls
             args = [
@@ -98,25 +179,29 @@ function App() {
               powershellCommand
             ];
           } else {
-            args = input.split(' ');
+            args = activeTab.input.split(' ');
           }
         }
         
         const result = await invoke<string>('execute_command', {
           commandName: shellName,
           args: args,
-          workingDir: currentDirectory
+          workingDir: activeTab.currentDirectory
         });
         
         if (result.trim()) {
-          setOutput(prev => [...prev, result]);
+          updateActiveTab({ output: [...activeTab.output, result] });
         }
       }
     } catch (error) {
-      setOutput(prev => [...prev, `Failed to execute command: ${error}`]);
+      updateActiveTab({
+        output: [...activeTab.output, `Failed to execute command: ${error}`]
+      });
     } finally {
-      setIsProcessing(false);
-      setInput('');
+      updateActiveTab({
+        isProcessing: false,
+        input: ''
+      });
       // Focus the input element after command execution
       setTimeout(() => {
         inputRef.current?.focus();
@@ -125,37 +210,112 @@ function App() {
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isProcessing) {
+    if (activeTab && e.key === 'Enter' && !activeTab.isProcessing) {
       executeCommand();
     }
   };
+
+  // Handle double-click on topbar to maximize/restore window
+  const handleTopbarDoubleClick = () => {
+    window.toggleMaximize();
+  };
+  
+  // If no active tab, show loading or placeholder
+  if (!activeTab) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
   
   return (
     <div className="flex flex-col h-screen bg-black text-green-400 p-2 font-mono">
-      <div data-tauri-drag-region className="flex gap-10 w-full h-10 mb-4 bg-white">
-        <div className='h-auto w-10 bg-gray-700' onClick={() => appWindow.minimize()}></div>
-        <div className='h-auto w-10 bg-gray-700' onClick={() => appWindow.maximize()}></div>
-        <div className='h-auto w-10 bg-gray-700' onClick={() => appWindow.close()}></div>
+      {/* Topbar - Add data-tauri-drag-region to make the topbar draggable */}
+      <div 
+        className="flex items-center w-full h-10 mb-4 bg-gray-600 border-b border-gray-700" 
+        data-tauri-drag-region
+        onDoubleClick={handleTopbarDoubleClick}
+      >
+        <div className="flex-1 flex items-center overflow-x-auto" data-tauri-drag-region>
+          {tabs.map(tab => {
+            // Extract the last part of the directory path for the tab name
+            const pathParts = tab.currentDirectory.split(/[\\\/]/);
+            const dirName = pathParts[pathParts.length - 1] || 
+                           (pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'Terminal');
+            return (
+              <div
+                key={tab.id} 
+                className={`relative flex items-center px-4 py-2 mr-1 cursor-pointer ${
+                  tab.id === activeTabId ? 'bg-gray-800 text-white' : 'bg-gray-700 text-gray-300'
+                }`}
+                onClick={() => setActiveTabId(tab.id)}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <span className="truncate max-w-[100px]">{dirName}</span>
+                {tabs.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(tab.id);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    className="ml-2 text-sm hover:text-red-500"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          <button
+            onClick={addNewTab}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-xl font-light"
+          >
+            +
+          </button>
+        </div>
+        <div className="flex" data-tauri-drag-region>
+          <button
+            className="h-auto w-10 bg-gray-700 flex items-center justify-center hover:bg-gray-600" 
+            onClick={() => window.minimize()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            -
+          </button>
+          <button
+            className="h-auto w-10 bg-gray-700 flex items-center justify-center hover:bg-gray-600" 
+            onClick={() => window.toggleMaximize()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            □
+          </button>
+          <button
+            className="h-auto w-10 bg-gray-700 flex items-center justify-center hover:bg-gray-600 hover:text-red-500" 
+            onClick={() => window.close()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            ×
+          </button>
+        </div>
       </div>
+      
       <div className="flex-1 overflow-auto mb-4">
-        {output.map((line, index) => (
+        {activeTab.output.map((line, index) => (
           <div key={index} className="whitespace-pre-wrap">{line}</div>
         ))}
         <div ref={outputEndRef} />
       </div>
       
       <div className="flex items-center">
-        <span className="mr-2">{currentDirectory}</span>
+        <span className="mr-2">{activeTab.currentDirectory}</span>
         <input
-          ref={inputRef} // Add this line
+          ref={inputRef}
           type="text"
-          value={input}
+          value={activeTab.input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           className="flex-1 bg-transparent outline-none"
           placeholder="Enter command..."
-          disabled={isProcessing}
-          autoFocus // Add this to ensure initial focus
+          disabled={activeTab.isProcessing}
+          autoFocus
         />
       </div>
     </div>
