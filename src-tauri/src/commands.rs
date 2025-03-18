@@ -29,14 +29,31 @@ pub fn change_directory(path: &str) -> String {
     }
 }
 
-#[command]
-pub fn execute_command(command_name: &str, args: Vec<&str>, working_dir: &str) -> String {
+#[tauri::command]
+pub fn execute_command(command_name: &str, args: Vec<String>, working_dir: &str) -> String {
+    use std::process::{Command, Stdio};
+    
     let mut command = Command::new(command_name);
+    
+    // Add all arguments
     command.args(args);
     
-    // Set the working directory
+    // Set working directory
     command.current_dir(working_dir);
     
+    // Critical for Windows: ensure no window appears
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    
+    // Redirect stdout and stderr
+    command.stdout(Stdio::piped());
+    command.stderr(Stdio::piped());
+    
+    // Execute the command and handle output
     match command.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout).to_string();
@@ -47,6 +64,6 @@ pub fn execute_command(command_name: &str, args: Vec<&str>, working_dir: &str) -
             }
             stdout
         },
-        Err(e) => format!("Failed to execute command: {}", e)
+        Err(e) => format!("Error executing command: {}", e),
     }
 }
