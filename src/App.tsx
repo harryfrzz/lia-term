@@ -351,23 +351,24 @@ import { useEffect, useState, useRef } from 'react';
               +
             </button>
           </div>
-          <div className="flex" data-tauri-drag-region>
+          <div className="flex gap-2 mr-2" data-tauri-drag-region>
+
             <button
-              className="h-10 w-10 bg-transparent flex items-center justify-center hover:bg-gray-600" 
+              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-600" 
               onClick={() => window.minimize()}
               onMouseDown={(e) => e.stopPropagation()}
             >
               -
             </button>
             <button
-              className="h-auto w-10 bg-transparent flex items-center justify-center hover:bg-gray-600" 
+              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-600" 
               onClick={() => window.toggleMaximize()}
               onMouseDown={(e) => e.stopPropagation()}
             >
               □
             </button>
             <button
-              className="h-auto w-10 bg-transparent flex items-center justify-center hover:bg-gray-600 hover:text-red-500" 
+              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-600 hover:text-red-500" 
               onClick={() => window.close()}
               onMouseDown={(e) => e.stopPropagation()}
             >
