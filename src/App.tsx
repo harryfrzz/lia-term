@@ -2,15 +2,15 @@ import { useEffect, useState, useRef } from 'react';
   import { invoke } from '@tauri-apps/api/core';
   import { getCurrentWindow } from '@tauri-apps/api/window';
 
-  // Define interface for terminal tab
+
   interface TerminalTab {
     id: string;
     input: string;
     output: string[];
     isProcessing: boolean;
     currentDirectory: string;
-    commandHistory: string[]; // Array of previously executed commands
-    historyIndex: number;     // Current position in history when navigating
+    commandHistory: string[]; 
+    historyIndex: number;     
   }
 
   function App() {
@@ -20,7 +20,7 @@ import { useEffect, useState, useRef } from 'react';
     const inputRef = useRef<HTMLInputElement>(null);
     const window = getCurrentWindow();
     
-    // Initialize the first tab on component mount
+
     useEffect(() => {
       const initialTabId = Date.now().toString();
       const isWindows = !navigator.userAgent.includes('Linux') && !navigator.userAgent.includes('Mac');
@@ -30,29 +30,29 @@ import { useEffect, useState, useRef } from 'react';
         input: '',
         output: [],
         isProcessing: false,
-        currentDirectory: isWindows ? 'C:\\' : '/home', // Platform-specific default
+        currentDirectory: isWindows ? 'C:\\' : '/home', 
         commandHistory: [],
         historyIndex: -1,
       }]);
       setActiveTabId(initialTabId);
     }, []);
 
-    // Get the currently active tab
+   
     const activeTab = tabs.find(tab => tab.id === activeTabId);
 
-    // Auto-scroll to bottom of terminal output
+
     useEffect(() => {
       if (activeTab) {
         outputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }
     }, [activeTab?.output]);
 
-    // Focus input when component mounts or active tab changes
+    
     useEffect(() => {
       inputRef.current?.focus();
     }, [activeTabId]);
 
-    // Fetch initial directory when a new tab is created
+
     useEffect(() => {
       if (!activeTab) return;
 
@@ -65,15 +65,15 @@ import { useEffect, useState, useRef } from 'react';
         }
       };
       
-      // Only fetch if we have the default directory
+
       if (activeTab.currentDirectory === 'C:\\') {
         getInitialDirectory();
       }
     }, [activeTabId]);
 
-    // Focus input when window gains focus
+
     useEffect(() => {
-      // Skip if no active tab
+
       if (!activeTab) return;
       
       const focusHandler = () => {
@@ -82,16 +82,15 @@ import { useEffect, useState, useRef } from 'react';
         }, 10);
       };
       
-      // Listen for window focus events
+
       const unlisten = window.listen('tauri://focus', focusHandler);
       
-      // Clean up listener
+
       return () => {
         unlisten.then(unlistenFn => unlistenFn());
       };
     }, [activeTab]);
 
-    // Helper to update active tab
     const updateActiveTab = (updates: Partial<TerminalTab>) => {
       setTabs(currentTabs => 
         currentTabs.map(tab => 
@@ -125,12 +124,10 @@ import { useEffect, useState, useRef } from 'react';
     };
 
     const closeTab = (tabId: string) => {
-      // Don't close the last tab
       if (tabs.length <= 1) return;
       
       setTabs(currentTabs => currentTabs.filter(tab => tab.id !== tabId));
-      
-      // If we're closing the active tab, activate the previous one
+
       if (activeTabId === tabId) {
         const tabIndex = tabs.findIndex(tab => tab.id === tabId);
         const newActiveIndex = tabIndex === 0 ? 1 : tabIndex - 1;
@@ -147,7 +144,7 @@ import { useEffect, useState, useRef } from 'react';
       if (!activeTab) return;
       if (!activeTab.input.trim()) return;
       
-      // Save command to history (avoid duplicates at the end)
+
       const trimmedInput = activeTab.input.trim();
       let updatedHistory = [...activeTab.commandHistory];
       
@@ -160,33 +157,33 @@ import { useEffect, useState, useRef } from 'react';
         isProcessing: true,
         output: [...activeTab.output, `${activeTab.currentDirectory}> ${activeTab.input}`],
         commandHistory: updatedHistory,
-        historyIndex: updatedHistory.length // Set to end of history
+        historyIndex: updatedHistory.length
       });
       
-      // Handle clear command
+     
       const trimmedInputLower = activeTab.input.trim().toLowerCase();
       if (trimmedInputLower === 'clear' || trimmedInputLower === 'cls') {
-        // Clear screen after a brief delay to show the command
+       
         setTimeout(() => {
           updateActiveTab({
             output: [],
             isProcessing: false,
             input: ''
           });
-          inputRef.current?.focus(); // Focus input after clearing
+          inputRef.current?.focus(); 
         }, 100);
         return;
       }
       
       try {
-        // Handle cd command specially to track directory changes
+       
         if (trimmedInputLower.startsWith('cd ')) {
           const newPath = activeTab.input.trim().substring(3);
           const result = await invoke<string>('change_directory', {
             path: newPath
           });
           
-          // Update current directory
+         
           updateActiveTab({ currentDirectory: result });
           
           if (result.trim()) {
@@ -194,23 +191,22 @@ import { useEffect, useState, useRef } from 'react';
             updateActiveTab({ output: updatedOutput });
           }
         } else {
-          // Regular command execution
-          let shellName = 'powershell';  // Default to cmd on Windows
+        
+          let shellName = 'powershell'; 
           let args: string[] = [];
           
-          // On Unix-like systems, use bash
+      
           if (navigator.userAgent.includes('Linux') || navigator.userAgent.includes('Mac')) {
             shellName = 'bash';
-            args = [activeTab.input]; // Pass the full command as one argument
+            args = [activeTab.input];
           } else {
-            // For Windows, split the command
+            
             if (activeTab.input.toLowerCase().startsWith('powershell ')) {
               shellName = 'powershell';
-              
-              // Get the actual PowerShell command
+  
               const powershellCommand = activeTab.input.substring('powershell '.length);
               
-              // Simple handling for all PowerShell commands without special formatting for ls
+              
               args = [
                 '-NoProfile',
                 '-ExecutionPolicy', 'Bypass',
@@ -240,9 +236,9 @@ import { useEffect, useState, useRef } from 'react';
         updateActiveTab({
           isProcessing: false,
           input: '',
-          historyIndex: activeTab.commandHistory.length // Point to end of history
+          historyIndex: activeTab.commandHistory.length 
         });
-        // Focus the input element after command execution
+
         setTimeout(() => {
           inputRef.current?.focus();
         }, 0);
@@ -256,18 +252,16 @@ import { useEffect, useState, useRef } from 'react';
         executeCommand();
         return;
       }
-      
-      // Command history navigation with arrow keys
+    
       if (e.key === 'ArrowUp') {
-        e.preventDefault(); // Prevent cursor from moving to start of input
-        
-        // If we're at the end of history (-1 means "current input, not from history")
+        e.preventDefault(); 
+
         if (activeTab.historyIndex === -1) {
-          // Save current input in case user wants to return to it
+       
           updateActiveTab({ historyIndex: activeTab.commandHistory.length });
         }
         
-        // Move back in history if possible
+
         if (activeTab.historyIndex > 0) {
           const newIndex = activeTab.historyIndex - 1;
           updateActiveTab({
@@ -276,20 +270,19 @@ import { useEffect, useState, useRef } from 'react';
           });
         }
       } else if (e.key === 'ArrowDown') {
-        e.preventDefault(); // Prevent cursor from moving to end of input
+        e.preventDefault();
         
-        // If we have history and we're not at the end
+       
         if (activeTab.commandHistory.length > 0 && activeTab.historyIndex < activeTab.commandHistory.length) {
           const newIndex = activeTab.historyIndex + 1;
           
-          // If reached end of history, clear input
+
           if (newIndex === activeTab.commandHistory.length) {
             updateActiveTab({
-              historyIndex: -1, // -1 indicates "current input"
+              historyIndex: -1, 
               input: ''
             });
           } else {
-            // Otherwise show the next command in history
             updateActiveTab({
               historyIndex: newIndex,
               input: activeTab.commandHistory[newIndex]
@@ -299,19 +292,16 @@ import { useEffect, useState, useRef } from 'react';
       }
     };
 
-    // Handle double-click on topbar to maximize/restore window
     const handleTopbarDoubleClick = () => {
       window.toggleMaximize();
     };
-    
-    // If no active tab, show loading or placeholder
+
     if (!activeTab) {
       return <div className="flex items-center justify-center h-screen">Loading...</div>;
     }
     
     return (
       <div className="flex mt-10 flex-col h-screen bg-[rgb(0,0,0)] text-purple-500 p-2 font-mono">
-        {/* Topbar with SVG filter blur */}
         <div 
           className="flex items-center w-full h-10 overflow-hidden select-none fixed top-0 left-0 z-10" 
           style={{ 
@@ -324,7 +314,7 @@ import { useEffect, useState, useRef } from 'react';
         >
           <div className="flex-1 flex items-center overflow-x-auto" data-tauri-drag-region>
             {tabs.map(tab => {
-              // Extract the last part of the directory path for the tab name
+
               const pathParts = tab.currentDirectory.split(/[\\\/]/);
               const dirName = pathParts[pathParts.length - 1] || 
                             (pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'Terminal');
