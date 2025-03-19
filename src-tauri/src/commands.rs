@@ -1,7 +1,6 @@
 use std::env;
 use std::path::PathBuf;
 use tauri::command;
-use std::process::Command;
 
 #[command]
 pub fn get_current_directory() -> String {
@@ -16,10 +15,8 @@ pub fn change_directory(path: &str) -> String {
     let current_dir = env::current_dir().unwrap_or_default();
     let new_dir = if path.starts_with("/") || 
                    (path.len() > 1 && path.chars().nth(1) == Some(':')) {
-        // Absolute path
         PathBuf::from(path)
     } else {
-        // Relative path
         current_dir.join(path)
     };
     
@@ -35,13 +32,10 @@ pub fn execute_command(command_name: &str, args: Vec<String>, working_dir: &str)
     
     let mut command = Command::new(command_name);
     
-    // Add all arguments
     command.args(args);
     
-    // Set working directory
     command.current_dir(working_dir);
     
-    // Critical for Windows: ensure no window appears
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
@@ -49,11 +43,9 @@ pub fn execute_command(command_name: &str, args: Vec<String>, working_dir: &str)
         command.creation_flags(CREATE_NO_WINDOW);
     }
     
-    // Redirect stdout and stderr
     command.stdout(Stdio::piped());
     command.stderr(Stdio::piped());
     
-    // Execute the command and handle output
     match command.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout).to_string();
