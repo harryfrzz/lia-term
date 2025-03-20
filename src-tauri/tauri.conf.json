@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "terminal-app",
+  "productName": "lia-term",
   "version": "0.1.0",
-  "identifier": "com.terminal-app.app",
+  "identifier": "com.lia.term",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "terminal-app",
+        "title": "lia term",
         "width": 1080,
         "height": 640,
         "decorations": false,

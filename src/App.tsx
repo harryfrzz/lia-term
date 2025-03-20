@@ -305,7 +305,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
     return (
       <div className="flex mt-10 flex-col h-screen bg-[rgba(0,0,0,0.77)] text-purple-500 p-2 font-mono">
         <div 
-          className="flex items-center w-full h-14 overflow-hidden select-none fixed top-0 z-10 left-0 bg-[rgba(0,0,0,0.79)] border-b border-[rgb(19,19,19)]" 
+          className="flex items-center w-full h-14 overflow-hidden select-none fixed top-0 z-10 left-0 bg-[rgba(0,0,0,0.49)] border-b border-[rgb(19,19,19)]" 
           data-tauri-drag-region
           onDoubleClick={handleTopbarDoubleClick}
         >
