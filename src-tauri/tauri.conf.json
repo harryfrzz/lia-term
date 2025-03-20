@@ -17,7 +17,7 @@
         "height": 640,
         "decorations": false,
         "transparent": true,
-        "additionalBrowserArgs": "--disable-gpu-vsync --disable-gpu --disable-backing-store-limit --disable-gpu-compositing --disable-accelerated-2d-canvas --renderer-process-limit=1 --disable-features=CalculateNativeWinOcclusion --disable-site-isolation-trials --disable-dev-shm-usage --process-per-site --renderer-process-limit=1 --disable-cache --js-flags=\"--max-old-space-size=256\" --disable-breakpad --enable-aggressive-memory-purge --enable-features=HighEfficiencyMode,IntensiveWakeUpThrottling --disable-field-trial-config --disable-background-timer-throttling --memory-model=low"
+        "additionalBrowserArgs": "--disable-gpu-vsync --disable-gpu --disable-backing-store-limit --disable-gpu-compositing --disable-accelerated-2d-canvas --renderer-process-limit=1 --disable-features=CalculateNativeWinOcclusion,BackForwardCache,MediaSessionService --disable-site-isolation-trials --disable-dev-shm-usage --process-per-site --disable-cache --js-flags=\"--max-old-space-size=200\" --disable-breakpad --enable-aggressive-memory-purge --enable-features=HighEfficiencyMode,IntensiveWakeUpThrottling --disable-field-trial-config --disable-background-timer-throttling --memory-model=low --disable-software-rasterizer --disable-webgl --disable-webgl2 --disable-canvas-aa --single-process --disable-extensions --disable-remote-fonts --disable-speech-api --mute-audio --aggressive-cache-discard --disable-backgrounding-occluded-windows --disable-component-extensions-with-background-pages"
       }
     ],
     "security": {
