@@ -333,7 +333,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
                         closeTab(tab.id);
                       }}
                       onMouseDown={(e) => e.stopPropagation()}
-                      className="ml-2 w-5 h-5 bg-[rgb(58,24,97)] rounded-full text-sm hover:text-red-500"
+                      className="ml-2 w-5 h-5 bg-[rgb(59,59,59)] rounded-full text-sm hover:text-red-500"
                     >
                       ×
                     </button>
@@ -345,7 +345,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
             <button
               onClick={addNewTab}
               onMouseDown={(e) => e.stopPropagation()}
-              className="flex items-center ml-2 justify-center h-6 rounded-full w-6 bg-[rgb(34,34,34)] hover:bg-gray-600 text-xl font-light"
+              className="flex items-center ml-2 justify-center h-9 rounded-md w-8 bg-[rgb(36,36,36)] hover:bg-gray-600 text-xl font-light"
             >
               +
             </button>
