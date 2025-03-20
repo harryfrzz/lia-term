@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-  import { invoke } from '@tauri-apps/api/core';
-  import { getCurrentWindow } from '@tauri-apps/api/window';
-
+import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
   interface TerminalTab {
     id: string;
@@ -91,6 +90,9 @@ import { useEffect, useState, useRef } from 'react';
       };
     }, [activeTab]);
 
+    document.addEventListener('contextmenu', (event: MouseEvent) => {
+      event.preventDefault();
+    });
     const updateActiveTab = (updates: Partial<TerminalTab>) => {
       setTabs(currentTabs => 
         currentTabs.map(tab => 
@@ -303,7 +305,7 @@ import { useEffect, useState, useRef } from 'react';
     return (
       <div className="flex mt-10 flex-col h-screen bg-[rgb(0,0,0)] text-purple-500 p-2 font-mono">
         <div 
-          className="flex items-center w-full h-10 overflow-hidden select-none fixed top-0 left-0 z-10" 
+          className="flex items-center w-full h-14 overflow-hidden select-none fixed top-0 z-10 left-0" 
           style={{ 
             backgroundColor: 'rgba(0,0,0,0.6)',
             backdropFilter: 'url(#blur-effect)',
@@ -312,22 +314,18 @@ import { useEffect, useState, useRef } from 'react';
           data-tauri-drag-region
           onDoubleClick={handleTopbarDoubleClick}
         >
-          <div className="flex-1 flex items-center overflow-x-auto" data-tauri-drag-region>
+          <div className="flex-1 p-2 flex items-center overflow-x-auto" data-tauri-drag-region>
             {tabs.map(tab => {
-
-              const pathParts = tab.currentDirectory.split(/[\\\/]/);
-              const dirName = pathParts[pathParts.length - 1] || 
-                            (pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'Terminal');
               return (
                 <div
                   key={tab.id} 
-                  className={`relative flex items-center px-4 py-2 mr-1 cursor-pointer ${
+                  className={`relative flex items-center rounded-lg px-4 py-2 mr-1 cursor-pointer ${
                     tab.id === activeTabId ? 'bg-[#1818189c] text-white' : 'bg-[rgba(0,0,0,0)] text-gray-300'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
                   onMouseDown={(e) => e.stopPropagation()}
                 >
-                  <span className="truncate max-w-[100px]">{dirName}</span>
+                  <span className="truncate max-w-[120px] font-jetbrains font-thin text-sm">lia terminal</span>
                   {tabs.length > 1 && (
                     <button
                       onClick={(e) => {
@@ -343,6 +341,7 @@ import { useEffect, useState, useRef } from 'react';
                 </div>
               );
             })}
+           
             <button
               onClick={addNewTab}
               onMouseDown={(e) => e.stopPropagation()}
@@ -389,7 +388,7 @@ import { useEffect, useState, useRef } from 'react';
             backdropFilter: 'url(#blur-effect)',
             borderBottom: '1px solid rgb(19,19,19)'
           }}>
-          <span className='w-auto whitespace-nowrap'>{activeTab.currentDirectory}</span>
+          <span className='w-auto whitespace-nowrap'>{activeTab.currentDirectory} &gt;</span>
           <input
             ref={inputRef}
             type="text"
@@ -397,7 +396,6 @@ import { useEffect, useState, useRef } from 'react';
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             className="flex w-full bg-transparent ml-3 outline-none"
-            placeholder="Enter command..."
             disabled={activeTab.isProcessing}
             autoFocus
           />
