@@ -315,7 +315,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
                 <div
                   key={tab.id} 
                   className={`relative flex items-center rounded-lg px-4 py-2 mr-1 cursor-pointer ${
-                    tab.id === activeTabId ? 'bg-[#1818189c] text-white' : 'bg-[rgba(0,0,0,0)] text-gray-300'
+                    tab.id === activeTabId ? 'bg-[#3a3a3a9c] text-white' : 'bg-[rgba(0,0,0,0)] text-gray-300'
                   }`}
                   onClick={() => setActiveTabId(tab.id)}
                   onMouseDown={(e) => e.stopPropagation()}
@@ -340,7 +340,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
             <button
               onClick={addNewTab}
               onMouseDown={(e) => e.stopPropagation()}
-              className="flex items-center ml-2 justify-center h-9 rounded-md w-8 bg-[rgb(65,65,65)] hover:bg-gray-600 text-xl font-light"
+              className="flex items-center ml-2 justify-center h-9 rounded-md w-8 bg-[rgb(65,65,65)] hover:bg-gray-400 text-xl font-light"
             >
               +
             </button>
@@ -348,21 +348,21 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
           <div className="flex gap-2 mr-3" data-tauri-drag-region>
 
             <button
-              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-600" 
+              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-400" 
               onClick={() => window.minimize()}
               onMouseDown={(e) => e.stopPropagation()}
             >
               -
             </button>
             <button
-              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-600" 
+              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-400" 
               onClick={() => window.toggleMaximize()}
               onMouseDown={(e) => e.stopPropagation()}
             >
               □
             </button>
             <button
-              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-600 hover:text-red-500" 
+              className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-400 hover:text-red-500" 
               onClick={() => window.close()}
               onMouseDown={(e) => e.stopPropagation()}
             >
