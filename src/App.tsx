@@ -303,14 +303,9 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
     }
     
     return (
-      <div className="flex mt-10 flex-col h-screen bg-[rgb(0,0,0)] text-purple-500 p-2 font-mono">
+      <div className="flex mt-10 flex-col h-screen bg-[rgba(0,0,0,0.77)] text-purple-500 p-2 font-mono">
         <div 
-          className="flex items-center w-full h-14 overflow-hidden select-none fixed top-0 z-10 left-0" 
-          style={{ 
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'url(#blur-effect)',
-            borderBottom: '1px solid rgb(19,19,19)'
-          }}
+          className="flex items-center w-full h-14 overflow-hidden select-none fixed top-0 z-10 left-0 bg-[rgba(0,0,0,0.79)] border-b border-[rgb(19,19,19)]" 
           data-tauri-drag-region
           onDoubleClick={handleTopbarDoubleClick}
         >
@@ -345,12 +340,12 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
             <button
               onClick={addNewTab}
               onMouseDown={(e) => e.stopPropagation()}
-              className="flex items-center ml-2 justify-center h-9 rounded-md w-8 bg-[rgb(36,36,36)] hover:bg-gray-600 text-xl font-light"
+              className="flex items-center ml-2 justify-center h-9 rounded-md w-8 bg-[rgb(65,65,65)] hover:bg-gray-600 text-xl font-light"
             >
               +
             </button>
           </div>
-          <div className="flex gap-2 mr-2" data-tauri-drag-region>
+          <div className="flex gap-2 mr-3" data-tauri-drag-region>
 
             <button
               className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-600" 
@@ -376,18 +371,14 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
           </div>
         </div>
         
-        <div className="flex-1 h-full overflow-auto">
+        <div className="flex-1 h-full mb-12 overflow-auto">
           {activeTab.output.map((line, index) => (
-            <div key={index} className="whitespace-pre-wrap mt-10 mb-15">{line}</div>
+            <div key={index} className="whitespace-pre-wrap mt-10">{line}</div>
           ))}
           <div ref={outputEndRef} />
         </div>
         
-        <div className="flex w-full flex-row items-center p-3 bg-transparent fixed bottom-0 left-0 border-t border-[rgb(19,19,19)]" style={{ 
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'url(#blur-effect)',
-            borderBottom: '1px solid rgb(19,19,19)'
-          }}>
+        <div className="flex w-full flex-row items-center p-3 bg-[rgba(0,0,0,0.26)] fixed bottom-0 left-0 border-t border-[rgb(19,19,19)]">
           <span className='w-auto whitespace-nowrap'>{activeTab.currentDirectory} &gt;</span>
           <input
             ref={inputRef}

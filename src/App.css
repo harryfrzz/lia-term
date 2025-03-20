@@ -4,8 +4,6 @@
 @theme{
     --font-inter: "Inter", "sans-serif"; 
     --font-jetbrains: "JetBrains Mono", monospace;
-
-
 }
 body{
     overflow: hidden;
@@ -14,13 +12,12 @@ body{
     width: 8px;
 }
 ::-webkit-scrollbar-track{
-    background: #111;
+    background: #1f1f1f;
     border-radius: 4px;
-    margin-top: 40px;
-    margin-bottom: 50px;
+    margin-top: 50px;
 
 }
 ::-webkit-scrollbar-thumb{
-    background: #242424;
+    background: #6d6d6d;
     border-radius: 4px;
 }
