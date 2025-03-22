@@ -7,7 +7,7 @@
 
 ## ✨ Features  
 - 🖥 **Modern UI** – A sleek and minimalistic interface.  
-- ⚡ **Fast & Lightweight** – Runs efficiently on Windows, using around **80MB RAM** (may improve in future updates).  
+- ⚡ **Fast & Lightweight** – Runs efficiently on Windows, using around **50 - 60MB RAM** (may improve in future updates).  
 - 🌐 **Web-Based Technologies** – Built using React and Rust for performance and flexibility.  
 - 🔄 **Cross-Platform Support** – *Currently under development (Only works on Windows for now).*  
 
